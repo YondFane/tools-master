@@ -1,0 +1,9 @@
+projectName = gdjd-xunjia
+
+commonModules = dao,service,entity,common,security
+
+sourcePath = C:\Users\YFAN\Desktop\test
+
+workspacePath = C:\Users\YFAN\Desktop\gdjd-xunjia-root
+
+savePath = C:\Users\YFAN\Desktop\save
