@@ -1,9 +1,14 @@
+# 项目名
 projectName = gdjd-xunjia
 
+# 公共组件名
 commonModules = dao,service,entity,common,security
 
+# 源码目录
 sourcePath = C:\Users\YFAN\Desktop\test
 
+# 工作空间
 workspacePath = C:\Users\YFAN\Desktop\gdjd-xunjia-root
 
+# 保存目录
 savePath = C:\Users\YFAN\Desktop\save
