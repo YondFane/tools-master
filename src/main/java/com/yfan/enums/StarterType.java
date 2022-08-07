@@ -8,7 +8,8 @@ import com.yfan.console.Console;
  */
 public enum StarterType {
 
-    PROJECT(1, "项目启动器");
+    PROJECT(1, "项目启动器"),
+    GENERATOR(2, "代码生成器");
 
     private Integer code;
     private String des;

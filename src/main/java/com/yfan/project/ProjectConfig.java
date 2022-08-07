@@ -46,7 +46,9 @@ public class ProjectConfig {
      * 初始化配置
      */
     public static void initConfig() {
-        config = Config.getConfig();
+        if (config == null) {
+            config = Config.getConfig();
+        }
         projectName = config.get("projectName");
         SOURCE_PATH = config.get("sourcePath");
         WORKSPACE_PATH = config.get("workspacePath");

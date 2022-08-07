@@ -25,7 +25,7 @@ public class Main {
         try {
             String type;
             if (args.length == 0) {
-                Console.info("请选择需要执行的工具(1：项目构建工具，2：待开发)");
+                Console.info("请选择需要执行的工具(1：项目构建工具，2：代码生成器)");
                 type = sc.nextLine();
             } else {
                 type = args[0];

@@ -1,5 +1,7 @@
 package com.yfan.starter;
 
+import java.sql.SQLException;
+
 /**
  * 启动器接口
  * @Author: YFAN
@@ -7,6 +9,6 @@ package com.yfan.starter;
  */
 public interface Starter {
 
-    void start();
+    void start() throws Exception;
 
 }

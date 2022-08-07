@@ -16,6 +16,7 @@ public class StarterFactory {
 
     static {
         map.put(StarterType.PROJECT.getCode(), new ProjectStarter());
+        map.put(StarterType.GENERATOR.getCode(), new GeneratorStarter());
     }
 
     /**
