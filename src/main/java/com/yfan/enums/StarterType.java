@@ -1,6 +1,6 @@
 package com.yfan.enums;
 
-import com.yfan.console.Console;
+import cn.hutool.core.lang.Console;
 
 /**
  * @Author: YFAN
@@ -24,7 +24,7 @@ public enum StarterType {
         try {
             num = Integer.parseInt(type);
         } catch (Exception e) {
-            Console.info(e);
+            Console.log(e);
         }
         return getType(num);
     }
@@ -37,7 +37,7 @@ public enum StarterType {
             }
         }
         if (type == null) {
-            Console.info(new RuntimeException("找不到对应的启动器！code:" + code));
+            Console.log(new RuntimeException("找不到对应的启动器！code:" + code));
         }
         return type;
     }

@@ -1,12 +1,12 @@
 package com.yfan.generator;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.lang.Console;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.Db;
 import cn.hutool.db.ds.DSFactory;
 import cn.hutool.setting.Setting;
 import com.yfan.config.Config;
-import com.yfan.console.Console;
 
 import javax.sql.DataSource;
 
@@ -115,28 +115,28 @@ public class GeneratorConfig {
         if (StrUtil.isNotBlank(templatePath2)) {
             if (FileUtil.exist(templatePath2)) {
                 templatePath = templatePath2;
-                Console.info("=============模板目录为：{}", templatePath);
+                Console.log("=============模板目录为：{}", templatePath);
             } else {
-                Console.info(new RuntimeException("模板路径不存在"));
+                Console.log(new RuntimeException("模板路径不存在"));
             }
         }
         String templateName2 = config.get("templateName");
         if (StrUtil.isBlank(templateName2)) {
-            Console.info(new RuntimeException("模板没有配置"));
+            Console.log(new RuntimeException("模板没有配置"));
         } else {
             templateName = templateName2;
-            Console.info("=============模板为：{}", templateName);
+            Console.log("=============模板为：{}", templateName);
 
         }
         /*if ("".equals(templatePath) && FileUtil.exist(templateName2)) {
             templateName = templateName2;
-            Console.info("=============模板路径为：{}", FileUtil.getAbsolutePath(templatePath2));
+            Console.log("=============模板路径为：{}", FileUtil.getAbsolutePath(templatePath2));
 
         } else if (!templatePath.equals("") && FileUtil.exist(templatePath, templateName2)) {
             templateName = templateName2;
-            Console.info("=============模板路径为：{}/{}", templatePath, templateName);
+            Console.log("=============模板路径为：{}/{}", templatePath, templateName);
         } else {
-            Console.info(new RuntimeException("模板不存在"));
+            Console.log(new RuntimeException("模板不存在"));
         }*/
         DSFactory dsFactory = DSFactory.create(config);
         dataSource = dsFactory.getDataSource();
@@ -155,9 +155,9 @@ public class GeneratorConfig {
         // 生成保存路径
         generatorPath = config.get("generator.path");
         if (FileUtil.exist(generatorPath)) {
-            Console.info("=============模板生成保存路径为：{}", generatorPath);
+            Console.log("=============模板生成保存路径为：{}", generatorPath);
         } else {
-            Console.info(new RuntimeException("模板生成保存路径不存在"));
+            Console.log(new RuntimeException("模板生成保存路径不存在"));
         }
     }
 

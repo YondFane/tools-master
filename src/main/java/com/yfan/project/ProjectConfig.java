@@ -1,10 +1,10 @@
 package com.yfan.project;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.lang.Console;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.setting.Setting;
 import com.yfan.config.Config;
-import com.yfan.console.Console;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -62,7 +62,7 @@ public class ProjectConfig {
         for (String s : commonPaths) {
             commonModules.add(projectName + "-" + s);
         }
-        Console.info("公共组件配置：{}", commonModules.toString());
+        Console.log("公共组件配置：{}", commonModules.toString());
 
     }
 
@@ -71,32 +71,32 @@ public class ProjectConfig {
      */
     private static void check() {
         if (StrUtil.isBlank(projectName)) {
-            Console.info(new RuntimeException("项目名不能为空"));
+            Console.log(new RuntimeException("项目名不能为空"));
         } else {
-            Console.info("项目名:{}", projectName);
+            Console.log("项目名:{}", projectName);
         }
         if (StrUtil.isBlank(SOURCE_PATH)) {
-            Console.info(new RuntimeException("源码目录不能为空"));
+            Console.log(new RuntimeException("源码目录不能为空"));
         } else {
-            Console.info("源码目录:{}", projectName);
+            Console.log("源码目录:{}", projectName);
             if (!FileUtil.exist(SOURCE_PATH)) {
-                Console.info(new RuntimeException("源码目录不存在！"));
+                Console.log(new RuntimeException("源码目录不存在！"));
             }
         }
         if (StrUtil.isBlank(WORKSPACE_PATH)) {
-            Console.info(new RuntimeException("工作空间不能为空"));
+            Console.log(new RuntimeException("工作空间不能为空"));
         } else {
-            Console.info("工作空间:{}", WORKSPACE_PATH);
+            Console.log("工作空间:{}", WORKSPACE_PATH);
             if (!FileUtil.exist(WORKSPACE_PATH)) {
-                Console.info(new RuntimeException("工作空间不存在！"));
+                Console.log(new RuntimeException("工作空间不存在！"));
             }
         }
         if (StrUtil.isBlank(SAVE_PATH)) {
             throw new RuntimeException("保存目录不能为空");
         } else {
-            Console.info("保存目录:{}", SAVE_PATH);
+            Console.log("保存目录:{}", SAVE_PATH);
             if (!FileUtil.exist(SAVE_PATH)) {
-                Console.info(new RuntimeException("保存目录不存在！"));
+                Console.log(new RuntimeException("保存目录不存在！"));
             }
         }
     }

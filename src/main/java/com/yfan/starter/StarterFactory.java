@@ -1,6 +1,6 @@
 package com.yfan.starter;
 
-import com.yfan.console.Console;
+import cn.hutool.core.lang.Console;
 import com.yfan.enums.StarterType;
 
 import java.util.HashMap;
@@ -38,7 +38,7 @@ public class StarterFactory {
         try {
             num = Integer.parseInt(code);
         } catch (Exception e) {
-            Console.info(e);
+            Console.log(e);
         }
         return map.get(num);
     }

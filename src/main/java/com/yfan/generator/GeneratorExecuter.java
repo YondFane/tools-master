@@ -2,11 +2,11 @@ package com.yfan.generator;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.lang.Console;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.Db;
 import cn.hutool.db.Entity;
 import cn.hutool.extra.template.*;
-import com.yfan.console.Console;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -43,7 +43,7 @@ public class GeneratorExecuter {
      * @throws IOException
      */
     public static void execute() throws SQLException, IOException {
-        Console.info("=======================代码生成器执行开始=================");
+        Console.log("=======================代码生成器执行开始=================");
         GeneratorConfig.initConfig();
         Db db = GeneratorConfig.db();
         // 获取模板
@@ -52,11 +52,11 @@ public class GeneratorExecuter {
         File file = new File(GeneratorConfig.generatorPath, fileName + ".java");
         // 组织参数
         HashMap<String, Object> paramMap = buildParamMap(db);
-        Console.info("组织参数:{}", paramMap.toString());
+        Console.log("组织参数:{}", paramMap.toString());
         // 生成模板文件
         createTemplateFile(file, template, paramMap);
-        Console.info("生成路径为：{}", file.getAbsolutePath());
-        Console.info("=======================代码生成器执行结束=================");
+        Console.log("生成路径为：{}", file.getAbsolutePath());
+        Console.log("=======================代码生成器执行结束=================");
     }
 
     /**
@@ -75,11 +75,11 @@ public class GeneratorExecuter {
             tableInfo = db.queryOne(GeneratorConfig.ORACLE_SQL_TABLE_INFO, GeneratorConfig.tableName);
             tableColumns = db.query(GeneratorConfig.ORACLE_SQL_COLUMN_INFO, GeneratorConfig.tableName);
         } else {
-            Console.info(new RuntimeException(GeneratorConfig.currentDatasource + "数据库类型不支持！"));
+            Console.log(new RuntimeException(GeneratorConfig.currentDatasource + "数据库类型不支持！"));
         }
 
-        Console.info("{}表信息：{}", GeneratorConfig.tableName, tableInfo.toString());
-        Console.info("{}表字段信息：{}", GeneratorConfig.tableName, tableColumns.toString());
+        Console.log("{}表信息：{}", GeneratorConfig.tableName, tableInfo.toString());
+        Console.log("{}表字段信息：{}", GeneratorConfig.tableName, tableColumns.toString());
         // 接口别名
         genMap.put("apiAlias", GeneratorConfig.apiAlias);
         // 包名称
@@ -176,10 +176,10 @@ public class GeneratorExecuter {
             TemplateEngine engine = TemplateUtil.createEngine(templateConfig);
             template = engine.getTemplate(GeneratorConfig.templateName);
         } catch (Exception e) {
-            Console.info(e);
+            Console.log(e);
         }
         if (template == null) {
-            Console.info(new RuntimeException("获取不到模板！"));
+            Console.log(new RuntimeException("获取不到模板！"));
         }
         return template;
     }
