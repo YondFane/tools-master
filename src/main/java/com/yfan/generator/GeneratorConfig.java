@@ -109,6 +109,7 @@ public class GeneratorConfig {
     public static void initConfig() {
         if (config == null) {
             config = Config.getConfig();
+            Console.log("配置文件：\n{}",config);
         }
         currentDatasource = config.get("currentDatasource");
         String templatePath2 = config.get("templatePath");
