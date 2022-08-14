@@ -40,8 +40,8 @@ public class GeneratorConfig {
             "select temp.column_name columnname, " +
             "        temp.data_type dataType," +
             "        nvl(temp.comments,' ') columnComment, " +
-            "        case temp.constraint_type when 'P' then 'PRI' when 'C' then 'UNI' else ' ' end 'COLUMNKEY', " +
-            "        'NULL' 'EXTRA' " +
+            "        case temp.constraint_type when 'P' then 'PRI' when 'C' then 'UNI' else ' ' end COLUMNKEY, " +
+            "        'NULL' EXTRA " +
             "        from ( " +
             "        select col.column_id, " +
             "        col.column_name, " +

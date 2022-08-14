@@ -77,7 +77,9 @@ public class GeneratorExecuter {
         } else {
             Console.log(new RuntimeException(GeneratorConfig.currentDatasource + "数据库类型不支持！"));
         }
-
+        if (tableInfo == null || tableColumns.size() == 0) {
+            Console.log(new RuntimeException("表信息或表字段信息为空！"));
+        }
         Console.log("{}表信息：{}", GeneratorConfig.tableName, tableInfo.toString());
         Console.log("{}表字段信息：{}", GeneratorConfig.tableName, tableColumns.toString());
         // 接口别名
