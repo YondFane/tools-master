@@ -95,7 +95,7 @@ public class GeneratorExecuter {
         // 创建日期
         genMap.put("date", LocalDate.now().toString());
         // 表名
-        String tableName = tableInfo.getTableName();
+        String tableName = (String) tableInfo.get("tableName");
         genMap.put("tableName", tableName.toUpperCase());
         // 表注释
         if (StrUtil.isBlank((CharSequence) tableInfo.get("tablecomment"))) {
