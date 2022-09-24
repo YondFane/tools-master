@@ -11,7 +11,7 @@ import java.io.File;
  * @CreateTime: 2022-08-07 11:10
  */
 public class Config {
-    private static final String CONFIG_PATH = "config.txt";
+    private static final String CONFIG_PATH = "config.properties";
 
     public static Setting getConfig(){
         File config = FileUtil.file(CONFIG_PATH);
