@@ -7,7 +7,9 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+<#if hasWhereIsDeleted>
 import org.hibernate.annotations.Where;
+</#if>
 <#if hasDateAnnotation>
 import org.hibernate.annotations.*;
 </#if>
