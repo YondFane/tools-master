@@ -1,11 +1,14 @@
 package ${packageModule}.entity;
 
 import lombok.Data;
-import javax.persistence.*;
+import java.io.Serializable;
 import io.swagger.annotations.ApiModelProperty;
-<#if hasDateAnnotation>
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Where;
+<#if hasDateAnnotation>
 import org.hibernate.annotations.*;
 </#if>
 <#if hasTimestamp>
@@ -14,7 +17,10 @@ import java.sql.Timestamp;
 <#if hasBigDecimal>
 import java.math.BigDecimal;
 </#if>
-import java.io.Serializable;
+<#if auto>
+import org.hibernate.annotations.GenericGenerator;
+</#if>
+
 
 /**
 *
@@ -24,12 +30,19 @@ import java.io.Serializable;
 **/
 @Entity
 @Data
+@DynamicInsert(true)
+@DynamicUpdate(true)
 @Table(name="${tableName}")
+<#if hasWhereIsDeleted>
+@Where(clause="${IsDeleted}=0")
+</#if>
 public class ${className} implements Serializable {
 <#if columns??>
     <#list columns as column>
 
-    /** ${column.remark} */
+    /**
+        ${column.remark}
+     */
     <#if column.columnKey = 'PRI'>
     @Id
     <#if auto>

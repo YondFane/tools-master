@@ -48,14 +48,20 @@ public class GeneratorExecuter {
         Db db = GeneratorConfig.db();
         // 获取模板
         Template template = getTemplate();
-        String fileName = Character.toUpperCase(GeneratorConfig.tableName.charAt(0)) + GeneratorConfig.tableName.substring(1);
-        File file = new File(GeneratorConfig.generatorPath, fileName + ".java");
-        // 组织参数
-        HashMap<String, Object> paramMap = buildParamMap(db);
-        Console.log("组织参数:{}", paramMap.toString());
-        // 生成模板文件
-        createTemplateFile(file, template, paramMap);
-        Console.log("生成路径为：{}", file.getAbsolutePath());
+        // 多表生成
+        String[] tableNames = GeneratorConfig.tableName.split(",");
+        for (String tableName : tableNames) {
+            String fileName = StrUtil.toCamelCase(tableName);
+            fileName = Character.toUpperCase(fileName.charAt(0)) + fileName.substring(1);
+
+            File file = new File(GeneratorConfig.generatorPath, fileName + ".java");
+            // 组织参数
+            HashMap<String, Object> paramMap = buildParamMap(db,tableName);
+            Console.log("组织参数:{}", paramMap.toString());
+            // 生成模板文件
+            createTemplateFile(file, template, paramMap);
+            Console.log("生成路径为：{}", file.getAbsolutePath());
+        }
         Console.log("=======================代码生成器执行结束=================");
     }
 
@@ -64,24 +70,24 @@ public class GeneratorExecuter {
      *
      * @return
      */
-    private static HashMap<String, Object> buildParamMap(Db db) throws SQLException {
+    private static HashMap<String, Object> buildParamMap(Db db, String tableName) throws SQLException {
         HashMap<String, Object> genMap = new HashMap<>();
         Entity tableInfo = null;
         List<Entity> tableColumns = null;
         if ("MYSQL".equals(GeneratorConfig.currentDatasource)) {
-            tableInfo = db.queryOne(GeneratorConfig.MYSQL_SQL_TABLE_INFO, GeneratorConfig.tableName);
-            tableColumns = db.query(GeneratorConfig.MYSQL_SQL_COLUMN_INFO, GeneratorConfig.tableName);
+            tableInfo = db.queryOne(GeneratorConfig.MYSQL_SQL_TABLE_INFO, tableName);
+            tableColumns = db.query(GeneratorConfig.MYSQL_SQL_COLUMN_INFO, tableName);
         } else if ("ORACLE".equals(GeneratorConfig.currentDatasource)) {
-            tableInfo = db.queryOne(GeneratorConfig.ORACLE_SQL_TABLE_INFO, GeneratorConfig.tableName);
-            tableColumns = db.query(GeneratorConfig.ORACLE_SQL_COLUMN_INFO, GeneratorConfig.tableName);
+            tableInfo = db.queryOne(GeneratorConfig.ORACLE_SQL_TABLE_INFO, tableName);
+            tableColumns = db.query(GeneratorConfig.ORACLE_SQL_COLUMN_INFO, tableName);
         } else {
             Console.log(new RuntimeException(GeneratorConfig.currentDatasource + "数据库类型不支持！"));
         }
         if (tableInfo == null || tableColumns.size() == 0) {
             Console.log(new RuntimeException("表信息或表字段信息为空！"));
         }
-        Console.log("{}表信息：{}", GeneratorConfig.tableName, tableInfo.toString());
-        Console.log("{}表字段信息：{}", GeneratorConfig.tableName, tableColumns.toString());
+        Console.log("{}表信息：{}", tableName, tableInfo.toString());
+        Console.log("{}表字段信息：{}", tableName, tableColumns.toString());
         // 接口别名
         genMap.put("apiAlias", GeneratorConfig.apiAlias);
         // 包名称
@@ -94,9 +100,8 @@ public class GeneratorExecuter {
         genMap.put("author", GeneratorConfig.author);
         // 创建日期
         genMap.put("date", LocalDate.now().toString());
-        // 表名
-        String tableName = (String) tableInfo.get("tableName");
-        genMap.put("tableName", tableName.toUpperCase());
+
+        genMap.put("tableName", tableName);
         // 表注释
         if (StrUtil.isBlank((CharSequence) tableInfo.get("tablecomment"))) {
             genMap.put("tableComment", "");
@@ -104,7 +109,8 @@ public class GeneratorExecuter {
             genMap.put("tableComment", tableInfo.get("tablecomment"));
         }
         // 大写开头的类名
-        String className = Character.toUpperCase(tableName.charAt(0)) + tableName.substring(1);
+        String camelCaseTableName = StrUtil.toCamelCase(tableName);
+        String className = Character.toUpperCase(camelCaseTableName.charAt(0)) + camelCaseTableName.substring(1);
 
         // 保存类名
         genMap.put("className", className);
@@ -121,16 +127,16 @@ public class GeneratorExecuter {
         List<Map<String, Object>> columns = new ArrayList<>();
         tableColumns.forEach(column -> {
             Map<String, Object> listMap = new HashMap<>();
-            String columnname = column.get("columnname").toString();
+            String columnName = column.get("columnName").toString();
             // 小写开头的字段名
-            String changeColumnName = StrUtil.toCamelCase(columnname);
+            String changeColumnName = StrUtil.toCamelCase(columnName);
             // 大写开头的字段名
             String capitalColumnName = Character.toUpperCase(changeColumnName.charAt(0)) + changeColumnName.substring(1);
 
             // 字段描述
             listMap.put("remark", column.get("columncomment"));
             // 字段类型
-            listMap.put("columnKey", column.get("datatype"));
+            listMap.put("columnKey", column.get("columnKey"));
             // 主键类型
             String colType = GeneratorConfig.cloToJava(column.get("datatype").toString());
             // 是否存在 Timestamp 类型的字段
@@ -149,16 +155,28 @@ public class GeneratorExecuter {
             if (EXTRA.equals(column.get("extra"))) {
                 genMap.put("auto", true);
             }
+            // 删除标志追加到sql查询语句
+            genMap.put("hasWhereIsDeleted", false);
+            if ("IS_DELETED".equals(columnName.toUpperCase())) {
+                genMap.put("hasWhereIsDeleted", true);
+                genMap.put("IsDeleted", columnName);
+            }
+
             // 存储字段类型
+            // 如果 columnType == tinyint(1) 那么字段类型为 Boolean
+            if ("tinyint(1)".equals(column.get("columnType"))) {
+                colType = "Boolean";
+            }
             listMap.put("columnType", colType);
             // 存储字原始段名称
-            listMap.put("columnName", columnname);
+            listMap.put("columnName", columnName);
             // 不为空
             listMap.put("istNotNull", false);
             // 小写开头的字段名称
             listMap.put("changeColumnName", changeColumnName);
             // 日期注解 TODO
             listMap.put("dateAnnotation", "");
+
             genMap.put("hasDateAnnotation", false);
             // 添加到字段列表中
             columns.add(listMap);
@@ -208,5 +226,7 @@ public class GeneratorExecuter {
         }
     }
 
-
+    public static void main(String[] args) {
+        System.out.println(StrUtil.toCamelCase("twet_tst"));
+    }
 }
