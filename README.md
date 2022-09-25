@@ -49,4 +49,5 @@ savePath = C:\Users\xxx\xxx\xxx
 ## 启动
 
 ## 2、代码生成器
-待完善
+### 生成实体类
+### 支持MySQL、Oracle
