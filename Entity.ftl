@@ -12,9 +12,6 @@ import org.hibernate.annotations.DynamicUpdate;
 <#if hasWhereIsDeleted>
 import org.hibernate.annotations.Where;
 </#if>
-<#if hasDateAnnotation>
-import org.hibernate.annotations.*;
-</#if>
 <#if hasTimestamp>
 import java.sql.Timestamp;
 </#if>
