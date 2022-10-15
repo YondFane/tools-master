@@ -1,4 +1,4 @@
-package com.yfan.generator;
+package com.yfan.tools.generator;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
@@ -6,8 +6,13 @@ import cn.hutool.core.lang.Console;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.Db;
 import cn.hutool.db.Entity;
+import cn.hutool.db.ds.DSFactory;
 import cn.hutool.extra.template.*;
+import cn.hutool.setting.Setting;
+import com.yfan.tools.AbstractTool;
+import com.yfan.tools.ITool;
 
+import javax.sql.DataSource;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -20,68 +25,74 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 代码生成器执行者
- *
+ * @BelongsProject: tools-master
+ * @BelongsPackage: com.yfan.tools.generator
+ * @Description: 代码生成器
  * @Author: YFAN
- * @CreateTime: 2022-08-07 16:16
+ * @CreateTime: 2022-10-15 14:22
+ * @Version: 1.0
  */
-public class GeneratorExecuter {
+public class GeneratorTool extends AbstractTool implements ITool {
 
-    private static final String TIMESTAMP = "Timestamp";
+    private DataSource dataSource;
 
-    private static final String BIGDECIMAL = "BigDecimal";
+    public GeneratorTool(Setting setting) {
+        super(setting);
+        initDataSource();
+    }
 
-    // 主键
-    public static final String PK = "PRI";
-    // mysql自增
-    public static final String EXTRA = "auto_increment";
+    @Override
+    public String getConfigGroupName() {
+        return "generator";
+    }
 
-    /**
-     * 执行
-     *
-     * @throws SQLException
-     * @throws IOException
-     */
-    public static void execute() throws SQLException, IOException {
-        Console.log("=======================代码生成器执行开始=================");
-        GeneratorConfig.initConfig();
-        Db db = GeneratorConfig.db();
+    private void initDataSource() {
+        Setting dbConfig = setting.getSetting("db");
+        DSFactory dsFactory = DSFactory.create(dbConfig);
+        this.dataSource = dsFactory.getDataSource();
+    }
+
+    @Override
+    public void excute() throws Exception {
         // 获取模板
         Template template = getTemplate();
         // 多表生成
-        String[] tableNames = GeneratorConfig.tableName.split(",");
+        String[] tableNames = getConfig("tableName").split(",");
         for (String tableName : tableNames) {
             String fileName = StrUtil.toCamelCase(tableName);
             fileName = Character.toUpperCase(fileName.charAt(0)) + fileName.substring(1);
 
-            File file = new File(GeneratorConfig.generatorPath, fileName + ".java");
+            File file = new File(getConfig("savepath"), fileName + ".java");
             // 组织参数
-            HashMap<String, Object> paramMap = buildParamMap(db,tableName);
+            HashMap<String, Object> paramMap = buildParamMap(tableName);
             Console.log("组织参数:{}", paramMap.toString());
             // 生成模板文件
             createTemplateFile(file, template, paramMap);
             Console.log("生成路径为：{}", file.getAbsolutePath());
         }
-        Console.log("=======================代码生成器执行结束=================");
     }
 
     /**
-     * 组织参数
-     *
-     * @return
-     */
-    private static HashMap<String, Object> buildParamMap(Db db, String tableName) throws SQLException {
+     * @description: 构建模板填充参数
+     * @author: YFAN
+     * @date: 2022/10/15/015 14:54
+     * @param: tableName
+     * @return: java.util.HashMap<java.lang.String, java.lang.Object>
+     **/
+    private HashMap<String, Object> buildParamMap(String tableName) throws SQLException {
+        Db db = Db.use(dataSource);
         HashMap<String, Object> genMap = new HashMap<>();
         Entity tableInfo = null;
         List<Entity> tableColumns = null;
-        if ("MYSQL".equals(GeneratorConfig.currentDatasource)) {
-            tableInfo = db.queryOne(GeneratorConfig.MYSQL_SQL_TABLE_INFO, tableName);
-            tableColumns = db.query(GeneratorConfig.MYSQL_SQL_COLUMN_INFO, tableName);
-        } else if ("ORACLE".equals(GeneratorConfig.currentDatasource)) {
-            tableInfo = db.queryOne(GeneratorConfig.ORACLE_SQL_TABLE_INFO, tableName);
-            tableColumns = db.query(GeneratorConfig.ORACLE_SQL_COLUMN_INFO, tableName);
+        String currentDatasource = getConfig("currentDatasource", "db");
+        if ("MYSQL".equals(currentDatasource)) {
+            tableInfo = db.queryOne(GeneratorQuerySQL.MYSQL_SQL_TABLE_INFO, tableName);
+            tableColumns = db.query(GeneratorQuerySQL.MYSQL_SQL_COLUMN_INFO, tableName);
+        } else if ("ORACLE".equals(currentDatasource)) {
+            tableInfo = db.queryOne(GeneratorQuerySQL.ORACLE_SQL_TABLE_INFO, tableName);
+            tableColumns = db.query(GeneratorQuerySQL.ORACLE_SQL_COLUMN_INFO, tableName);
         } else {
-            Console.log(new RuntimeException(GeneratorConfig.currentDatasource + "数据库类型不支持！"));
+            Console.log(new RuntimeException(currentDatasource + "数据库类型不支持！"));
         }
         if (tableInfo == null || tableColumns.size() == 0) {
             Console.log(new RuntimeException("表信息或表字段信息为空！"));
@@ -89,15 +100,15 @@ public class GeneratorExecuter {
         Console.log("{}表信息：{}", tableName, tableInfo.toString());
         Console.log("{}表字段信息：{}", tableName, tableColumns.toString());
         // 接口别名
-        genMap.put("apiAlias", GeneratorConfig.apiAlias);
+        genMap.put("apiAlias", getConfig("apiAlias"));
         // 包名称
-        genMap.put("package", GeneratorConfig.pack);
+        genMap.put("package", getConfig("package"));
         // 包名称+模块
-        genMap.put("packageModule", GeneratorConfig.packModule);
+        genMap.put("packageModule", getConfig("package") + getConfig("packModule"));
         // 模块名称
-        genMap.put("moduleName", GeneratorConfig.moduleName);
+        genMap.put("moduleName", getConfig("moduleName"));
         // 作者
-        genMap.put("author", GeneratorConfig.author);
+        genMap.put("author", getConfig("author"));
         // 创建日期
         genMap.put("date", LocalDate.now().toString());
 
@@ -138,21 +149,21 @@ public class GeneratorExecuter {
             // 字段类型
             listMap.put("columnKey", column.get("columnKey"));
             // 主键类型
-            String colType = GeneratorConfig.cloToJava(column.get("datatype").toString());
+            String colType = cloToJava(column.get("datatype").toString());
             // 是否存在 Timestamp 类型的字段
-            if (TIMESTAMP.equals(colType)) {
+            if ("Timestamp".equals(colType)) {
                 genMap.put("hasTimestamp", true);
             }
             // 是否存在 BigDecimal 类型的字段
-            if (BIGDECIMAL.equals(colType)) {
+            if ("BigDecimal".equals(colType)) {
                 genMap.put("hasBigDecimal", true);
             }
             // 主键是否自增
-            if (EXTRA.equals(column.get("extra"))) {
+            if ("auto_increment".equals(column.get("extra"))) {
                 genMap.put("auto", true);
             }
             // 主键是否自增
-            if (EXTRA.equals(column.get("extra"))) {
+            if ("auto_increment".equals(column.get("extra"))) {
                 genMap.put("auto", true);
             }
             // 删除标志追加到sql查询语句
@@ -187,32 +198,14 @@ public class GeneratorExecuter {
     }
 
     /**
-     * 获取模板
-     */
-    private static Template getTemplate() {
-        Template template = null;
-        try {
-            TemplateConfig templateConfig = new TemplateConfig(new File(GeneratorConfig.templatePath).getAbsolutePath(), TemplateConfig.ResourceMode.FILE);
-            TemplateEngine engine = TemplateUtil.createEngine(templateConfig);
-            template = engine.getTemplate(GeneratorConfig.templateName);
-        } catch (Exception e) {
-            Console.log(e);
-        }
-        if (template == null) {
-            Console.log(new RuntimeException("获取不到模板！"));
-        }
-        return template;
-    }
-
-    /**
-     * 生成模板文件
-     *
-     * @param file
-     * @param template
-     * @param map
-     * @throws IOException
-     */
-    private static void createTemplateFile(File file, Template template, Map<String, Object> map) throws IOException {
+     * @description: 生成模板文件
+     * @author: YFAN
+     * @date: 2022/10/15/015 14:55
+     * @param: file
+     * @param: template
+     * @param: paramMap
+     **/
+    private void createTemplateFile(File file, Template template, HashMap<String, Object> map) {
         // 生成目标文件
         Writer writer = null;
         try {
@@ -226,7 +219,40 @@ public class GeneratorExecuter {
         }
     }
 
-    public static void main(String[] args) {
-        System.out.println(StrUtil.toCamelCase("twet_tst"));
+    /**
+     * @description: 获取模板
+     * @author: YFAN
+     * @date: 2022/10/15/015 14:53
+     * @return: cn.hutool.extra.template.Template
+     **/
+    private Template getTemplate() {
+        Template template = null;
+        try {
+            TemplateConfig templateConfig = new TemplateConfig(new File(getConfig("templatePath")).getAbsolutePath(),
+                    TemplateConfig.ResourceMode.FILE);
+            TemplateEngine engine = TemplateUtil.createEngine(templateConfig);
+            template = engine.getTemplate(getConfig("templateName"));
+        } catch (Exception e) {
+            Console.log(e);
+        }
+        if (template == null) {
+            Console.log(new RuntimeException("获取不到模板！"));
+        }
+        return template;
     }
+
+    /**
+     * 转换mysql数据类型为java数据类型
+     *
+     * @param type 数据库字段类型
+     * @return String
+     */
+    private String cloToJava(String type) {
+        String result = getConfig(type, "dbTypeToJavaType");
+        if (StrUtil.isBlank(result)) {
+            return type;
+        }
+        return result;
+    }
+
 }
